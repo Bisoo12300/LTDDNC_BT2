@@ -16,6 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const auth = FIREBASE_AUTH;
+  
 
   // Handle login function
   const handleLogin = async () => {
@@ -24,7 +25,8 @@ const Login = () => {
       const response = await signInWithEmailAndPassword(auth, username, password);
       console.log(response);
       Alert.alert('Login successful');
-      // Add navigation to the home page or another page after successful login
+      // Điều hướng đến HomePage sau khi đăng nhập thành công
+      navigation.navigate('Home');
     } catch (error) {
       console.error(error);
       if (error.code === 'auth/user-not-found') {
@@ -72,7 +74,7 @@ const Login = () => {
           <Text style={styles.rememberText}>Remember Me</Text>
         </View>
         <View>
-          <Pressable onPress={() => Alert.alert('Forget Password!')}>
+          <Pressable onPress={() => navigation.navigate('ForgotPassword')}> 
             <Text style={styles.forgetText}>Forgot Password?</Text>
           </Pressable>
         </View>
