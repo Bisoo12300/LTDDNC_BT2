@@ -1,45 +1,43 @@
 import React, { useState } from 'react';
 import { Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View, Alert } from 'react-native';
-import firebase from '@react-native-firebase/app';
-import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
-import {auth} from './firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { FIREBASE_AUTH } from './firebaseConfig'; 
+
 const logo = require("../../assets/logo.png");
 
-
-export default function RegisterPage({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
- [confirmPassword, setConfirmPassword] = useState("");
+const RegisterPage = ({ navigation }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const auth = FIREBASE_AUTH;
 
   const handleRegister = async () => {
+    console.log('Register initiated');
+    console.log('Username:', username);
+    console.log('Password:', password);
+  
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");   
-
+      Alert.alert('Passwords do not match');
       return;
     }
-
+  
+    setLoading(true);
     try {
-      // Create a new user with Firebase Authentication
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-      const user = userCredential.user;   
-      const userData = {
-        email: user.email,
-        // Add other user data if needed
-      };
-      await firebase().collection('users').doc(user.uid).set(userData);
-
-      Alert.alert('Registration Successful', 'Welcome! You have successfully created an account.');
+      const response = await createUserWithEmailAndPassword(auth, username, password);
+      console.log('User created:', response);
+      Alert.alert('Registration successful');
     } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        Alert.alert('Error', 'That email address is already in use!');
-      } else if (error.code === 'auth/invalid-email') {
-        Alert.alert('Error', 'That email address is invalid!');
-      } else   
- if (error.code === 'auth/weak-password') {
-        Alert.alert('Error', 'Password should be at least 6 characters.');
+      console.error('Registration error:', error);
+      if (error.code === 'auth/weak-password') {
+        Alert.alert('Registration failed', 'The password is too weak');
+      } else if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('Registration failed', 'The email address is already in use');
       } else {
-        Alert.alert('Error', error.message);
+        Alert.alert('Registration failed', error.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,8 +49,8 @@ export default function RegisterPage({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder='EMAIL'
-          value={email}
-          onChangeText={setEmail}
+          value={username}
+          onChangeText={setUsername}
           autoCorrect={false}
           autoCapitalize='none'
         />
@@ -77,20 +75,20 @@ export default function RegisterPage({ navigation }) {
       </View>
 
       <View style={styles.buttonView}>
-        <Pressable style={styles.button} onPress={handleRegister}>
+        <Pressable style={styles.button} onPress={handleRegister} disabled={loading}>
           <Text style={styles.buttonText}>REGISTER</Text>
         </Pressable>
       </View>
 
       <Text style={styles.footerText}>
-        Already have an account?
-        <Text style={styles.login} onPress={() => navigation.navigate('Login')}> {/* Điều hướng khi nhấn vào */}
+        Already have an account? 
+        <Text style={styles.login} onPress={() => navigation.navigate('Login')}>
           Login
         </Text>
       </Text>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -143,3 +141,5 @@ const styles = StyleSheet.create({
     color: '#2596be',
   },
 });
+
+export default RegisterPage;

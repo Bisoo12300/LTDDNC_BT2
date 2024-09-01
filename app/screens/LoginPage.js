@@ -1,40 +1,42 @@
 import React, { useState } from 'react';
 import { Alert, Image, Pressable, SafeAreaView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Correct navigation import
-import {auth} from './firebaseConfig'; 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
+import { signInWithEmailAndPassword } from 'firebase/auth'; 
+import { FIREBASE_AUTH } from './firebaseConfig'; 
 
 const logo = require("../../assets/logo.png");
 const facebook = require("../../assets/facebook.png");
 const google = require("../../assets/search.png");
 const twitter = require("../../assets/twitter.png");
 
-export default function LoginForm() {
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [click, setClick] = useState(false);
-  const [username, setUsername] = useState(""); // Email will be used as username
-  const [password, setPassword] = useState("");
-  
-  const navigation = useNavigation(); // Get navigation instance
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+  const auth = FIREBASE_AUTH;
 
-  const handleLogin = () => {
-    auth()
-      .signInWithEmailAndPassword(username, password)
-      .then(() => {
-        Alert.alert('Login Successful!', 'Welcome back!');
-      })
-      .catch(error => {
-        console.error('Login error:', error); // Log the complete error for debugging
-
-        if (error.code === 'auth/invalid-email') {
-          Alert.alert('Error', 'Invalid email address.');
-        } else if (error.code === 'auth/user-not-found') {
-          Alert.alert('Error', 'User not found.');
-        } else if (error.code === 'auth/wrong-password') {
-          Alert.alert('Error', 'Incorrect password.');
-        } else {
-          Alert.alert('Error', 'Login failed. Please try again.'); // Generic error for unknown issues
-        }
-      });
+  // Handle login function
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await signInWithEmailAndPassword(auth, username, password);
+      console.log(response);
+      Alert.alert('Login successful');
+      // Add navigation to the home page or another page after successful login
+    } catch (error) {
+      console.error(error);
+      if (error.code === 'auth/user-not-found') {
+        Alert.alert('Login failed: User not found');
+      } else if (error.code === 'auth/wrong-password') {
+        Alert.alert('Login failed: Wrong password');
+      } else {
+        Alert.alert('Login failed: ' + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,7 +79,7 @@ export default function LoginForm() {
       </View>
 
       <View style={styles.buttonView}>
-        <Pressable style={styles.button} onPress={handleLogin}>
+        <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>LOGIN</Text>
         </Pressable>
         <Text style={styles.optionsText}>OR LOGIN WITH</Text>
@@ -91,108 +93,109 @@ export default function LoginForm() {
 
       <Text style={styles.footerText}>
         Don't have an account?{' '}
-        <Text style={styles.register} onPress={() => navigation.navigate('Register')}> {/* Navigate to Register */}
+        <Text style={styles.register} onPress={() => navigation.navigate('Register')}>
           Register
         </Text>
       </Text>
     </SafeAreaView>
   );
-}
+};
+
+export default Login;
 
 const styles = StyleSheet.create({
-  container : {
-    alignItems : "center",
+  container: {
+    alignItems: "center",
     paddingTop: 70,
   },
-  image : {
-    height : 160,
-    width : 170
+  image: {
+    height: 160,
+    width: 170,
   },
-  title : {
-    fontSize : 30,
-    fontWeight : "bold",
-    textTransform : "uppercase",
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    textTransform: "uppercase",
     textAlign: "center",
-    paddingVertical : 40,
-    color : "#2596be"
+    paddingVertical: 40,
+    color: "#2596be",
   },
-  inputView : {
-    gap : 15,
-    width : "100%",
-    paddingHorizontal : 40,
-    marginBottom  :5
+  inputView: {
+    gap: 15,
+    width: "100%",
+    paddingHorizontal: 40,
+    marginBottom: 5,
   },
-  input : {
-    height : 50,
-    paddingHorizontal : 20,
-    borderColor : "#2596be",
-    borderWidth : 1,
-    borderRadius: 7
+  input: {
+    height: 50,
+    paddingHorizontal: 20,
+    borderColor: "#2596be",
+    borderWidth: 1,
+    borderRadius: 7,
   },
-  rememberView : {
-    width : "100%",
-    paddingHorizontal : 50,
+  rememberView: {
+    width: "100%",
+    paddingHorizontal: 50,
     justifyContent: "space-between",
-    alignItems : "center",
-    flexDirection : "row",
-    marginBottom : 8
-  },
-  switch :{
-    flexDirection : "row",
-    gap : 1,
-    justifyContent : "center",
-    alignItems : "center"
-    
-  },
-  rememberText : {
-    fontSize: 13
-  },
-  forgetText : {
-    fontSize : 11,
-    color : "#2596be"
-  },
-  button : {
-    backgroundColor : "#2596be",
-    height : 45,
-    borderColor : "gray",
-    borderWidth  : 1,
-    borderRadius : 5,
-    alignItems : "center",
-    justifyContent : "center"
-  },
-  buttonText : {
-    color : "white"  ,
-    fontSize: 18,
-    fontWeight : "bold"
-  }, 
-  buttonView :{
-    width :"100%",
-    paddingHorizontal : 50
-  },
-  optionsText : {
-    textAlign : "center",
-    paddingVertical : 10,
-    color : "gray",
-    fontSize : 13,
-    marginBottom : 6
-  },
-  mediaIcons : {
-    flexDirection : "row",
-    gap : 30,
     alignItems: "center",
-    justifyContent : "center",
-    marginBottom : 23
+    flexDirection: "row",
+    marginBottom: 8,
   },
-  icons : {
-    width : 40,
+  switch: {
+    flexDirection: "row",
+    gap: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rememberText: {
+    fontSize: 13,
+  },
+  forgetText: {
+    fontSize: 11,
+    color: "#2596be",
+  },
+  button: {
+    backgroundColor: "#2596be",
+    height: 45,
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  buttonView: {
+    width: "100%",
+    paddingHorizontal: 50,
+  },
+  optionsText: {
+    textAlign: "center",
+    paddingVertical: 10,
+    color: "gray",
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  mediaIcons: {
+    flexDirection: "row",
+    gap: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 23,
+  },
+  icons: {
+    width: 40,
     height: 40,
   },
-  footerText : {
+  footerText: {
     textAlign: "center",
-    color : "gray",
+    color: "gray",
   },
-  register : {
-    color : "#2596be",
-    fontSize : 13
-  }
-})
+  register: {
+    color: "#2596be",
+    fontSize: 13,
+  },
+});
